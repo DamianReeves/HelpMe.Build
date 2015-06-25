@@ -3,8 +3,43 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.40302.0
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solution", ".solution", "{288A4FF7-0EB2-4835-9686-E08012812419}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{0D50B2D6-E153-42AF-8F40-57CF13EA9B9B}"
+	ProjectSection(SolutionItems) = preProject
+		paket.cmd = paket.cmd
+		paket.dependencies = paket.dependencies
+		paket.lock = paket.lock
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FSharp", "FSharp", "{837A639E-7170-48B1-AD0A-31104A1AAB1F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FAKE", "FAKE", "{4ECC9CF9-63E3-40D5-8D58-3DF5D2FA41E7}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fake.BuildHelpers", "FSharp\FAKE\Fake.BuildHelpers\Fake.BuildHelpers.fsproj", "{6F31B3A2-3B95-4D05-A5AA-9D27B5BE014A}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6F31B3A2-3B95-4D05-A5AA-9D27B5BE014A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F31B3A2-3B95-4D05-A5AA-9D27B5BE014A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F31B3A2-3B95-4D05-A5AA-9D27B5BE014A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F31B3A2-3B95-4D05-A5AA-9D27B5BE014A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4ECC9CF9-63E3-40D5-8D58-3DF5D2FA41E7} = {837A639E-7170-48B1-AD0A-31104A1AAB1F}
+		{6F31B3A2-3B95-4D05-A5AA-9D27B5BE014A} = {4ECC9CF9-63E3-40D5-8D58-3DF5D2FA41E7}
 	EndGlobalSection
 EndGlobal
