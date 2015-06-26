@@ -1,3 +1,4 @@
+﻿module Fake.BuildHelpers.AssemblyPackaging
 open System
 open System.Reflection
 open System.IO
