@@ -3,12 +3,66 @@ open System
 open System.Reflection
 open System.IO
 
+module AssemblyHelper =
+  open System
+  open System.Reflection
+  open System.Text.RegularExpressions
+
+  let defaultAssemblyExclusionRegex = Regex("""^System|^mscorlib|^Microsoft.CSharp$|^WindowsBase$""", RegexOptions.Compiled ||| RegexOptions.IgnoreCase)
+//  type AssemblyCompanyInfo = 
+//    | AssemblyCompany 
+//    | NoAssemblyCompany
+
+  let (|AssemblyCompany|NoCompany|) (assembly:Assembly) = 
+    match assembly.GetCustomAttribute<AssemblyCompanyAttribute>() with
+    | null -> NoCompany
+    | attrib -> AssemblyCompany attrib.Company  
+
+  type AssemblyHandle =
+    | AssemblyInstance of Value:Assembly
+    | AssemblyNameInstance of Value:AssemblyName
+    with
+    member this.FullName =
+      match this with
+      | AssemblyInstance value -> value.GetName().FullName
+      | AssemblyNameInstance value -> value.FullName
+
+    member this.Name =
+      match this with
+      | AssemblyInstance value -> value.GetName().Name
+      | AssemblyNameInstance value -> value.Name
+
+  type AssemblyFile =
+    |AssemblyFile of Path:string * Assembly:Assembly
+    |NotAnAssemblyFile
+    static member Create path = 
+      try
+        let asm = Assembly.LoadFrom(path)
+        AssemblyFile (path,asm)
+      with
+        | _ ->  NotAnAssemblyFile     
+
+  let FilterSystemAssemblies (assemblies: AssemblyHandle seq) =
+    assemblies |> Seq.where (fun asm -> not(defaultAssemblyExclusionRegex.IsMatch(asm.Name)))
+
+  let FilterGacAssemblies (assemblies: AssemblyHandle seq) =
+    assemblies |> Seq.where (fun asm -> 
+      match asm with
+      | AssemblyNameInstance assemblyName ->
+        printfn "[AssemblyName:%O]" assemblyName
+        true
+      | _ -> true
+    )
+
+open AssemblyHelper
+
 type PackageId = PackageId of string | Empty
 type PackageIdResolver = Assembly -> PackageId
 type OutputDirectory = DirectoryName of string  | Directory of DirectoryInfo | SameAsAssembly
 type AssemblyPackagingParams = {
   IdResolver: PackageIdResolver
   AuthorsResolver:Assembly -> string list
+  ReferencedAssembliesFilter:AssemblyHandle seq -> AssemblyHandle seq
   OutputDir: OutputDirectory
 }
 
@@ -31,11 +85,12 @@ let (|AssemblyCompany|NoCompany|) (assembly:Assembly) =
 let defaultPackagingParams = {
   OutputDir = SameAsAssembly
   IdResolver = (fun asm -> asm.GetName().Name |> PackageId)
+  ReferencedAssembliesFilter = FilterSystemAssemblies >> FilterGacAssemblies
   AuthorsResolver = (fun asm ->
     match asm with
     | AssemblyCompany company when String.IsNullOrWhiteSpace(company) -> []
     | AssemblyCompany company -> [company]    
-    | _ -> []
+    | _ -> []  
   )
 }
 
@@ -60,6 +115,9 @@ let defaultPaketTemplate = {
 module PathHelper =
   open System
   open System.IO
+  open System.Text.RegularExpressions
+
+  let internal libFileExtensionsRegex = new Regex("""\.dll$|\.exe""", RegexOptions.Compiled ||| RegexOptions.IgnoreCase)
   let MakeRelativePath basePath absolutePath =
     let dirSep = Path.DirectorySeparatorChar
     let basePath = 
@@ -104,7 +162,13 @@ let CreateTemplateForAssembly (configure:AssemblyPackagingParams -> AssemblyPack
     let parameters = defaultPackagingParams |> configure
     let packageId = parameters.IdResolver assembly
     let authors = parameters.AuthorsResolver assembly
-    let files = [relativePath]
+
+    let references = 
+      assembly.GetReferencedAssemblies() 
+      |> Seq.map (fun asm -> AssemblyNameInstance asm)
+      |> parameters.ReferencedAssembliesFilter
+
+    let files = [relativePath] @ [for asm in references -> asm.Name]
     {defaultPaketTemplate with
       Id=packageId
       Authors=authors
@@ -134,8 +198,14 @@ type PaketTemplate with
     | [] -> ()
     | files ->
       println "files"
-      files|> Seq.iter (fun file ->
-        println "\t%s ==> lib" file
+      files|> Seq.iter (fun file ->        
+        if PathHelper.libFileExtensionsRegex.IsMatch(file) then
+          println "\t%s ==> lib" file
+        else
+          println "\t%s.dll ==> lib" file
+          println "\t%s.exe ==> lib" file
+          println "\t%s.pdb ==> lib" file
+          println "\t%s.xml ==> lib" file
       )
 
 let printPaketTemplateFor assemblyFile = 

@@ -49,7 +49,7 @@
   <ItemGroup>
     <Compile Include="AssemblyPackaging.fs" />
     <None Include="AssemblyPackaging.fsx" />
-    <None Include="TryAssemblyProcessing.fsx" />
+    <None Include="TryAssemblyPackaging.fsx" />
     <None Include="App.config" />
   </ItemGroup>
   <PropertyGroup>
